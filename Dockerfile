@@ -1,5 +1,7 @@
 FROM python:3.11-alpine
 
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt /temp/requirements.txt
 COPY service /service
