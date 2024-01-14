@@ -1,11 +1,13 @@
 services:
-  web-app:
+  django:
     build:
       context: .
     ports:
       - "8000:8000"
     volumes:
       - ./service:/service
+    env_file:
+      - ./.env
     environment:
       - DB_HOST=database
       - DB_NAME=dbname
@@ -27,16 +29,15 @@ services:
 
   redis:
     image: redis:latest
-    container_name: redissska
+    container_name: redis
     hostname: redis
 
-  worker:
+  celery:
     build:
       context: .
-    hostname: worker
+    hostname: celery
     entrypoint: celery
-#    command: -A celery_app.app worker --loglevel=info
-    command: -A celery_app.app flower --loglevel=info
+    command: -A celery_app.app worker --loglevel=info
     volumes:
       - ./service:/service
     environment:
@@ -48,3 +49,23 @@ services:
       - redis
     depends_on:
       - redis
+
+  flower:
+    build:
+      context: .
+    hostname: flower
+    entrypoint: celery
+    command: -A celery_app.app flower
+    volumes:
+      - ./service:/service
+    environment:
+      - DB_HOST=database
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=pass
+    links:
+      - redis
+    depends_on:
+      - redis
+    ports:
+      - "5555:5555"
