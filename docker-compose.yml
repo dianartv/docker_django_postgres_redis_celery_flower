@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   django:
     build:
@@ -7,7 +9,7 @@ services:
     volumes:
       - ./service:/service
     env_file:
-      - ./.env
+      - ./.env.dev
     environment:
       - DB_HOST=database
       - DB_NAME=dbname
@@ -69,3 +71,6 @@ services:
       - redis
     ports:
       - "5555:5555"
+
+#volumes:
+#  db_data
