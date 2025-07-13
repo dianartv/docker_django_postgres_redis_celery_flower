@@ -11,23 +11,26 @@ services:
     env_file:
       - ./.env.dev
     command: >
-      sh -c "sleep 1 && 
-             python manage.py migrate &&
+      sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     depends_on:
-      - database
+      database:
+        condition: service_healthy
 
   database:
     image: postgres:14.6-alpine
     environment:
-
       - POSTGRES_USER=django_user
       - POSTGRES_PASSWORD=django_password
       - POSTGRES_DB=django_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U django_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:latest
-    container_name: redis
     hostname: redis
 
   celery:
@@ -40,13 +43,12 @@ services:
       - ./service:/service
     environment:
       - DB_HOST=database
-      - DB_NAME=dbname
-      - DB_USER=dbuser
-      - DB_PASS=pass
-    links:
-      - redis
+      - DB_NAME=django_db
+      - DB_USER=django_user
+      - DB_PASS=django_password
     depends_on:
       - redis
+      - database
 
   flower:
     build:
@@ -58,15 +60,11 @@ services:
       - ./service:/service
     environment:
       - DB_HOST=database
-      - DB_NAME=dbname
-      - DB_USER=dbuser
-      - DB_PASS=pass
-    links:
-      - redis
+      - DB_NAME=django_db
+      - DB_USER=django_user
+      - DB_PASS=django_password
     depends_on:
       - redis
+      - database
     ports:
       - "5555:5555"
-
-#volumes:
-#  db_data
